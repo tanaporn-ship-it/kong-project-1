@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School RFID Attendance V3</title>
+    <title>School RFID Attendance V4 (Edit/Delete/Subject)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background-color: #f0f2f5; }
         .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h1, h2 { color: #2c3e50; text-align: center; margin-bottom: 1.5rem; }
+        h1, h2, h3 { color: #2c3e50; text-align: center; margin-bottom: 1.5rem; }
         
         /* Input Styling */
         .form-group { margin-bottom: 10px; }
@@ -17,6 +17,18 @@
         button { width: 100%; padding: 14px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.2s; }
         button:hover { background-color: #45a049; }
         
+        /* Secondary Button (Cancel) */
+        .btn-secondary { background-color: #757575; margin-top: 10px; }
+        .btn-secondary:hover { background-color: #616161; }
+
+        /* Delete Button */
+        .btn-delete { background-color: #ff5252; padding: 5px 10px; font-size: 0.8rem; width: auto; margin: 0; }
+        .btn-delete:hover { background-color: #d32f2f; }
+
+        /* Edit Button */
+        .btn-edit { background-color: #2196F3; padding: 5px 10px; font-size: 0.8rem; width: auto; margin: 0; margin-right: 5px; }
+        .btn-edit:hover { background-color: #1976D2; }
+
         /* Status Messages */
         #status { margin-top: 1rem; padding: 15px; border-radius: 6px; text-align: center; display: none; font-weight: bold; }
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
@@ -28,9 +40,12 @@
         th { background-color: #4CAF50; color: white; border-radius: 6px 6px 0 0; }
         tr:last-child td { border-bottom: none; }
         
+        /* Admin Table Specifics */
+        .admin-table th { background-color: #607d8b; }
+        
         /* Profile Image Styles */
-        .profile-pic { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
-        .no-pic { width: 50px; height: 50px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #999; }
+        .profile-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
+        .no-pic { width: 40px; height: 40px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #999; }
 
         /* Admin Section Style */
         .admin-box { border: 2px dashed #cbd5e0; background-color: #f8fafc; }
@@ -39,12 +54,30 @@
         /* Grid for Form */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        
+        /* Subject Selector Style */
+        .subject-box { background: #e3f2fd; padding: 10px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 15px; text-align: center; }
+        .subject-box label { font-weight: bold; color: #1565c0; margin-right: 10px; }
+        .subject-box select { width: auto; display: inline-block; padding: 8px; margin: 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🏫 Daily Attendance Check-in</h1>
+    
+    <div class="subject-box">
+        <label>📚 Current Subject:</label>
+        <select id="attendanceSubject">
+            <option value="Homeroom">Homeroom (Morning)</option>
+            <option value="Math">Math</option>
+            <option value="Science">Science</option>
+            <option value="English">English</option>
+            <option value="History">History</option>
+            <option value="PE">P.E.</option>
+            <option value="Art">Art</option>
+        </select>
+    </div>
     
     <p style="text-align:center; color:#666;">Click the box below and scan your card.</p>
     <input type="text" id="attendanceInput" placeholder="Scan RFID tag here..." autofocus autocomplete="off">
@@ -58,8 +91,7 @@
                 <th>Photo</th>
                 <th>Time</th>
                 <th>Name</th>
-                <th>Grade</th>
-                <th>ID</th>
+                <th>Subject</th> <th>Grade</th>
             </tr>
         </thead>
         <tbody>
@@ -69,7 +101,8 @@
 
 <div class="container admin-box">
     <div class="admin-title">Teacher Control Panel</div>
-    <h2>➕ Register New Student</h2>
+    
+    <h2 id="formTitle">➕ Register New Student</h2>
     
     <div class="form-grid">
         <input type="text" id="regName" placeholder="Full Name (e.g. Somchai)">
@@ -88,28 +121,43 @@
     <label style="display:block; margin-top:10px; font-size:0.9em; color:#555;">Profile Photo:</label>
     <input type="file" id="regPhoto" accept="image/*">
 
-    <input type="text" id="regTag" placeholder="Click here & Scan Card to Register..." style="background-color: #fffde7;">
+    <input type="text" id="regTag" placeholder="Click here & Scan Card..." style="background-color: #fffde7;">
     
-    <button onclick="registerStudent()">Save Student Profile</button>
+    <button id="btnSave" onclick="registerStudent()">Save Student Profile</button>
+    <button id="btnCancel" class="btn-secondary" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+
+    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #ddd;">
+    
+    <h3>📋 Registered Students (Manage)</h3>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Photo</th>
+                <th>Name</th>
+                <th>Grade</th>
+                <th>Tag ID</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="studentListBody">
+            </tbody>
+    </table>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, setDoc, doc, onSnapshot, query, orderBy, limit, serverTimestamp } 
+  import { getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot, query, orderBy, limit, serverTimestamp } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDiymbu_dpuF0HYO8s-SLya5KU3sCdIpC0",
-  authDomain: "student-rfid-attendanc.firebaseapp.com",
-  projectId: "student-rfid-attendanc",
-  storageBucket: "student-rfid-attendanc.firebasestorage.app",
-  messagingSenderId: "406495228894",
-  appId: "1:406495228894:web:58da2ea9d60b331d9ae34f",
-  measurementId: "G-TD81T46BFX"
-};
-  // ----------------------------------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyDiymbu_dpuF0HYO8s-SLya5KU3sCdIpC0",
+    authDomain: "student-rfid-attendanc.firebaseapp.com",
+    projectId: "student-rfid-attendanc",
+    storageBucket: "student-rfid-attendanc.firebasestorage.app",
+    messagingSenderId: "406495228894",
+    appId: "1:406495228894:web:58da2ea9d60b331d9ae34f",
+    measurementId: "G-TD81T46BFX"
+  };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
@@ -122,23 +170,47 @@ const firebaseConfig = {
       reader.onerror = error => reject(error);
   });
 
-  // --- 2. STUDENT DIRECTORY (The "Phonebook") ---
-  // Now stores Name, Grade, AND Photo
+  // --- 2. STUDENT DIRECTORY & MANAGER ---
   let studentDirectory = {}; 
 
+  // Listen to 'students' collection for real-time updates
   onSnapshot(collection(db, "students"), (snapshot) => {
-      snapshot.forEach((doc) => {
-          const d = doc.data();
-          studentDirectory[doc.id] = {
+      const tbody = document.getElementById("studentListBody");
+      tbody.innerHTML = ""; // Clear list
+      studentDirectory = {}; // Reset local cache
+
+      snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          const id = docSnap.id;
+          
+          // Save to local directory for quick lookup
+          studentDirectory[id] = {
               name: d.name,
               grade: d.grade || "N/A",
-              photo: d.photo || null // Base64 string
+              photo: d.photo || null
           };
+
+          // Render row in Manage Table
+          let imgHtml = `<div class="no-pic">?</div>`;
+          if (d.photo) imgHtml = `<img src="${d.photo}" class="profile-pic">`;
+
+          const row = `
+            <tr>
+                <td>${imgHtml}</td>
+                <td>${d.name}</td>
+                <td>${d.grade}</td>
+                <td style="font-family:monospace; color:#666;">${id}</td>
+                <td>
+                    <button class="btn-edit" onclick="editStudent('${id}')">Edit</button>
+                    <button class="btn-delete" onclick="deleteStudent('${id}', '${d.name}')">Delete</button>
+                </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
       });
-      console.log("Directory updated:", Object.keys(studentDirectory).length + " students loaded.");
   });
 
-  // --- 3. REGISTRATION LOGIC ---
+  // --- 3. REGISTRATION / EDIT LOGIC ---
   window.registerStudent = async function() {
       const name = document.getElementById('regName').value.trim();
       const grade = document.getElementById('regGrade').value;
@@ -150,42 +222,85 @@ const firebaseConfig = {
           return;
       }
 
-      // Check if file is too big (Optional safety check: Limit to 500KB)
-      if (photoFile && photoFile.size > 500 * 1024) {
-          alert("Photo is too large! Please use a smaller image (under 500KB).");
-          return;
-      }
-
+      // Base64 logic
       let photoBase64 = null;
+      
+      // If uploading a new photo
       if (photoFile) {
-          try {
-              photoBase64 = await toBase64(photoFile);
-          } catch(e) {
-              console.error("Error processing image", e);
-              alert("Error processing image file.");
-              return;
+          if (photoFile.size > 500 * 1024) { alert("Photo too large (>500KB)"); return; }
+          photoBase64 = await toBase64(photoFile);
+      } else {
+          // If in Edit mode and no new photo selected, keep existing photo
+          if(studentDirectory[tagId]) {
+              photoBase64 = studentDirectory[tagId].photo;
           }
       }
 
       try {
-          // Save all details to 'students' collection
           await setDoc(doc(db, "students", tagId), {
               name: name,
               grade: grade,
-              photo: photoBase64, // Storing the image string directly
+              photo: photoBase64,
               registeredAt: serverTimestamp()
-          });
+          }, { merge: true }); // Merge true allows updating without overwriting missing fields
           
-          alert(`✅ Success! ${name} (${grade}) registered.`);
-          // Clear inputs
-          document.getElementById('regName').value = '';
-          document.getElementById('regGrade').value = '';
-          document.getElementById('regTag').value = '';
-          document.getElementById('regPhoto').value = ''; // Reset file input
+          alert(`✅ Saved: ${name}`);
+          resetForm();
       } catch (e) {
-          console.error("Error: ", e);
-          alert("❌ Error registering student.");
+          console.error(e);
+          alert("❌ Error saving student.");
       }
+  }
+
+  // Edit Trigger
+  window.editStudent = function(id) {
+      const student = studentDirectory[id];
+      if(!student) return;
+
+      // Populate Form
+      document.getElementById('regName').value = student.name;
+      document.getElementById('regGrade').value = student.grade;
+      document.getElementById('regTag').value = id;
+      
+      // Lock Tag ID (Cannot change ID in edit mode, must delete and re-add if ID changes)
+      document.getElementById('regTag').readOnly = true;
+      document.getElementById('regTag').style.backgroundColor = "#e0e0e0";
+
+      // Change Button Text
+      document.getElementById('formTitle').innerText = "✏️ Edit Student";
+      document.getElementById('btnSave').innerText = "Update Student";
+      document.getElementById('btnCancel').style.display = "block";
+      
+      // Scroll to form
+      document.querySelector('.admin-box').scrollIntoView({behavior: 'smooth'});
+  }
+
+  // Delete Trigger
+  window.deleteStudent = async function(id, name) {
+      if(confirm(`Are you sure you want to delete ${name}? This cannot be undone.`)) {
+          try {
+              await deleteDoc(doc(db, "students", id));
+              alert("Student deleted.");
+          } catch(e) {
+              console.error(e);
+              alert("Error deleting student.");
+          }
+      }
+  }
+
+  // Reset Form
+  window.resetForm = function() {
+      document.getElementById('regName').value = '';
+      document.getElementById('regGrade').value = '';
+      document.getElementById('regTag').value = '';
+      document.getElementById('regPhoto').value = '';
+      
+      // Reset UI state
+      document.getElementById('regTag').readOnly = false;
+      document.getElementById('regTag').style.backgroundColor = "#fffde7";
+      document.getElementById('formTitle').innerText = "➕ Register New Student";
+      document.getElementById('btnSave').innerText = "Save Student Profile";
+      document.getElementById('btnCancel').style.display = "none";
   }
 
   // --- 4. ATTENDANCE LOGIC ---
@@ -203,9 +318,9 @@ const firebaseConfig = {
   });
 
   async function markAttendance(id) {
-      // Look up student details
       const student = studentDirectory[id];
-      
+      const subject = document.getElementById('attendanceSubject').value; // Get Subject
+
       const studentName = student ? student.name : "Unknown Student";
       const studentGrade = student ? student.grade : "--";
       const studentPhoto = student ? student.photo : null;
@@ -215,12 +330,13 @@ const firebaseConfig = {
               tag_id: id,
               student_name: studentName,
               student_grade: studentGrade,
-              student_photo: studentPhoto, // We snapshot the photo so logs keep working even if profile changes
+              student_photo: studentPhoto,
+              subject: subject, // Save Subject
               timestamp: serverTimestamp()
           });
           
           if(student) {
-              showStatus(`✅ Welcome, ${studentName}!`, "success");
+              showStatus(`✅ ${studentName} checked in for ${subject}!`, "success");
           } else {
               showStatus(`⚠️ Unregistered Tag: ${id}`, "error");
           }
@@ -237,7 +353,7 @@ const firebaseConfig = {
       setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
   }
 
-  // --- 5. SHOW TABLE ---
+  // --- 5. SHOW ATTENDANCE TABLE ---
   const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"), limit(10));
   
   onSnapshot(q, (snapshot) => {
@@ -249,18 +365,15 @@ const firebaseConfig = {
           let dateStr = "Just now";
           if (data.timestamp) dateStr = data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-          // Handle Photo Logic
           let imgHtml = `<div class="no-pic">?</div>`;
-          if (data.student_photo) {
-              imgHtml = `<img src="${data.student_photo}" class="profile-pic">`;
-          }
+          if (data.student_photo) imgHtml = `<img src="${data.student_photo}" class="profile-pic">`;
 
           const row = `<tr>
               <td>${imgHtml}</td>
               <td>${dateStr}</td>
               <td style="font-weight:bold; color:#333;">${data.student_name || "Unknown"}</td>
-              <td><span style="background:#e8f5e9; padding:4px 8px; border-radius:10px; font-size:0.85em; color:#2e7d32;">${data.student_grade || "N/A"}</span></td>
-              <td style="color:#999; font-size:0.85em;">${data.tag_id}</td>
+              <td><span style="background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:4px; font-size:0.9em;">${data.subject || "Gen"}</span></td>
+              <td>${data.student_grade || "N/A"}</td>
           </tr>`;
           tbody.innerHTML += row;
       });
@@ -269,4 +382,3 @@ const firebaseConfig = {
 
 </body>
 </html>
-
