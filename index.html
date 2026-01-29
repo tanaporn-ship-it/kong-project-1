@@ -1,11 +1,11 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School RFID Attendance V4 (Edit/Delete/Subject)</title>
+    <title>School RFID Attendance V4 (Full Features)</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background-color: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 950px; margin: 2rem auto; padding: 0 1rem; background-color: #f0f2f5; }
         .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h1, h2, h3 { color: #2c3e50; text-align: center; margin-bottom: 1.5rem; }
         
@@ -16,19 +16,17 @@
         
         button { width: 100%; padding: 14px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.2s; }
         button:hover { background-color: #45a049; }
+
+        /* Secondary Buttons */
+        .btn-cancel { background-color: #757575; margin-top: 10px; display: none; }
+        .btn-cancel:hover { background-color: #616161; }
         
-        /* Secondary Button (Cancel) */
-        .btn-secondary { background-color: #757575; margin-top: 10px; }
-        .btn-secondary:hover { background-color: #616161; }
-
-        /* Delete Button */
-        .btn-delete { background-color: #ff5252; padding: 5px 10px; font-size: 0.8rem; width: auto; margin: 0; }
-        .btn-delete:hover { background-color: #d32f2f; }
-
-        /* Edit Button */
-        .btn-edit { background-color: #2196F3; padding: 5px 10px; font-size: 0.8rem; width: auto; margin: 0; margin-right: 5px; }
+        .btn-edit { background-color: #2196F3; padding: 5px 10px; width: auto; font-size: 0.85em; margin-right: 5px; }
         .btn-edit:hover { background-color: #1976D2; }
 
+        .btn-delete { background-color: #ef5350; padding: 5px 10px; width: auto; font-size: 0.85em; }
+        .btn-delete:hover { background-color: #d32f2f; }
+        
         /* Status Messages */
         #status { margin-top: 1rem; padding: 15px; border-radius: 6px; text-align: center; display: none; font-weight: bold; }
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
@@ -36,29 +34,29 @@
 
         /* Tables */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95rem; }
-        th, td { text-align: left; padding: 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        th, td { text-align: left; padding: 12px 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
         th { background-color: #4CAF50; color: white; border-radius: 6px 6px 0 0; }
         tr:last-child td { border-bottom: none; }
         
         /* Admin Table Specifics */
         .admin-table th { background-color: #607d8b; }
-        
+
         /* Profile Image Styles */
-        .profile-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
-        .no-pic { width: 40px; height: 40px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #999; }
+        .profile-pic { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
+        .no-pic { width: 45px; height: 45px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #999; }
 
         /* Admin Section Style */
         .admin-box { border: 2px dashed #cbd5e0; background-color: #f8fafc; }
         .admin-title { color: #64748b; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1.5px; font-weight: bold; margin-bottom: 15px; }
         
         /* Grid for Form */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
         
         /* Subject Selector Style */
-        .subject-box { background: #e3f2fd; padding: 10px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 15px; text-align: center; }
-        .subject-box label { font-weight: bold; color: #1565c0; margin-right: 10px; }
-        .subject-box select { width: auto; display: inline-block; padding: 8px; margin: 0; }
+        .subject-box { background: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-bottom: 20px; text-align: center; }
+        .subject-box label { color: #1565c0; font-weight: bold; margin-right: 10px; }
+        .subject-box select { width: auto; padding: 8px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -69,13 +67,12 @@
     <div class="subject-box">
         <label>📚 Current Subject:</label>
         <select id="attendanceSubject">
-            <option value="Homeroom">Homeroom (Morning)</option>
-            <option value="Math">Math</option>
+            <option value="Morning Assembly">Morning Assembly</option>
+            <option value="Mathematics">Mathematics</option>
             <option value="Science">Science</option>
             <option value="English">English</option>
             <option value="History">History</option>
-            <option value="PE">P.E.</option>
-            <option value="Art">Art</option>
+            <option value="Physical Ed">Physical Ed</option>
         </select>
     </div>
     
@@ -84,30 +81,35 @@
     
     <div id="status"></div>
 
-    <h3>🕒 Today's Live Log</h3>
+    <h3>🕒 Live Attendance Log</h3>
     <table id="attendanceTable">
         <thead>
             <tr>
                 <th>Photo</th>
                 <th>Time</th>
                 <th>Name</th>
-                <th>Subject</th> <th>Grade</th>
+                <th>Subject</th>
+                <th>Grade</th>
+                <th>Sex</th>
             </tr>
         </thead>
-        <tbody>
-            </tbody>
+        <tbody></tbody>
     </table>
 </div>
 
 <div class="container admin-box">
     <div class="admin-title">Teacher Control Panel</div>
-    
     <h2 id="formTitle">➕ Register New Student</h2>
     
     <div class="form-grid">
-        <input type="text" id="regName" placeholder="Full Name (e.g. Somchai)">
+        <input type="text" id="regName" placeholder="Full Name">
+        <select id="regSex">
+            <option value="" disabled selected>Sex</option>
+            <option value="Male">Male ♂️</option>
+            <option value="Female">Female ♀️</option>
+        </select>
         <select id="regGrade">
-            <option value="" disabled selected>Select Grade</option>
+            <option value="" disabled selected>Grade</option>
             <option value="Grade 1">Grade 1</option>
             <option value="Grade 2">Grade 2</option>
             <option value="Grade 3">Grade 3</option>
@@ -124,23 +126,23 @@
     <input type="text" id="regTag" placeholder="Click here & Scan Card..." style="background-color: #fffde7;">
     
     <button id="btnSave" onclick="registerStudent()">Save Student Profile</button>
-    <button id="btnCancel" class="btn-secondary" onclick="resetForm()" style="display:none;">Cancel Edit</button>
+    <button id="btnCancel" class="btn-cancel" onclick="resetForm()">Cancel Edit</button>
 
-    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #ddd;">
-    
-    <h3>📋 Registered Students (Manage)</h3>
+    <hr style="margin: 30px 0; border:0; border-top:1px solid #ddd;">
+
+    <h3>📋 Registered Students Database</h3>
     <table class="admin-table">
         <thead>
             <tr>
                 <th>Photo</th>
                 <th>Name</th>
+                <th>Sex</th>
                 <th>Grade</th>
                 <th>Tag ID</th>
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody id="studentListBody">
-            </tbody>
+        <tbody id="studentListBody"></tbody>
     </table>
 </div>
 
@@ -162,7 +164,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // --- 1. HELPER: CONVERT IMAGE TO BASE64 ---
+  // --- 1. HELPER: IMAGE TO BASE64 ---
   const toBase64 = file => new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -170,81 +172,82 @@
       reader.onerror = error => reject(error);
   });
 
-  // --- 2. STUDENT DIRECTORY & MANAGER ---
+  // --- 2. STUDENT DIRECTORY (Local Cache + Admin Table) ---
   let studentDirectory = {}; 
 
-  // Listen to 'students' collection for real-time updates
   onSnapshot(collection(db, "students"), (snapshot) => {
       const tbody = document.getElementById("studentListBody");
-      tbody.innerHTML = ""; // Clear list
-      studentDirectory = {}; // Reset local cache
+      tbody.innerHTML = ""; // Clear table
+      studentDirectory = {}; // Reset cache
 
       snapshot.forEach((docSnap) => {
           const d = docSnap.data();
           const id = docSnap.id;
           
-          // Save to local directory for quick lookup
+          // Store for lookup
           studentDirectory[id] = {
               name: d.name,
               grade: d.grade || "N/A",
+              sex: d.sex || "N/A",
               photo: d.photo || null
           };
 
-          // Render row in Manage Table
+          // Render Admin Table Row
           let imgHtml = `<div class="no-pic">?</div>`;
           if (d.photo) imgHtml = `<img src="${d.photo}" class="profile-pic">`;
+
+          let sexIcon = d.sex === 'Male' ? '♂️' : (d.sex === 'Female' ? '♀️' : '');
 
           const row = `
             <tr>
                 <td>${imgHtml}</td>
                 <td>${d.name}</td>
+                <td>${d.sex || '-'} ${sexIcon}</td>
                 <td>${d.grade}</td>
-                <td style="font-family:monospace; color:#666;">${id}</td>
+                <td style="font-family:monospace; color:#888; font-size:0.85em;">${id}</td>
                 <td>
                     <button class="btn-edit" onclick="editStudent('${id}')">Edit</button>
                     <button class="btn-delete" onclick="deleteStudent('${id}', '${d.name}')">Delete</button>
                 </td>
-            </tr>
-          `;
+            </tr>`;
           tbody.innerHTML += row;
       });
   });
 
-  // --- 3. REGISTRATION / EDIT LOGIC ---
+  // --- 3. REGISTER / UPDATE STUDENT ---
   window.registerStudent = async function() {
       const name = document.getElementById('regName').value.trim();
+      const sex = document.getElementById('regSex').value;
       const grade = document.getElementById('regGrade').value;
       const tagId = document.getElementById('regTag').value.trim();
       const photoFile = document.getElementById('regPhoto').files[0];
 
-      if (!name || !tagId || !grade) {
-          alert("Please fill in Name, Grade, and Scan a Tag!");
+      if (!name || !tagId || !grade || !sex) {
+          alert("Please fill in Name, Sex, Grade, and Scan a Tag!");
           return;
       }
 
-      // Base64 logic
+      // Handle Image
       let photoBase64 = null;
-      
-      // If uploading a new photo
       if (photoFile) {
           if (photoFile.size > 500 * 1024) { alert("Photo too large (>500KB)"); return; }
           photoBase64 = await toBase64(photoFile);
       } else {
-          // If in Edit mode and no new photo selected, keep existing photo
-          if(studentDirectory[tagId]) {
-              photoBase64 = studentDirectory[tagId].photo;
-          }
+          // If editing and no new photo, keep existing
+          if (studentDirectory[tagId]) photoBase64 = studentDirectory[tagId].photo;
       }
 
       try {
+          // merge: true keeps old fields if we don't overwrite them
           await setDoc(doc(db, "students", tagId), {
               name: name,
+              sex: sex,
               grade: grade,
               photo: photoBase64,
               registeredAt: serverTimestamp()
-          }, { merge: true }); // Merge true allows updating without overwriting missing fields
+          }, { merge: true });
           
-          alert(`✅ Saved: ${name}`);
+          alert(`✅ Student Saved: ${name}`);
           resetForm();
       } catch (e) {
           console.error(e);
@@ -252,22 +255,21 @@
       }
   }
 
-  // Edit Trigger
+  // --- 4. EDIT FUNCTION ---
   window.editStudent = function(id) {
-      const student = studentDirectory[id];
-      if(!student) return;
+      const s = studentDirectory[id];
+      if(!s) return;
 
-      // Populate Form
-      document.getElementById('regName').value = student.name;
-      document.getElementById('regGrade').value = student.grade;
+      // Fill Form
+      document.getElementById('regName').value = s.name;
+      document.getElementById('regSex').value = s.sex;
+      document.getElementById('regGrade').value = s.grade;
       document.getElementById('regTag').value = id;
       
-      // Lock Tag ID (Cannot change ID in edit mode, must delete and re-add if ID changes)
-      document.getElementById('regTag').readOnly = true;
+      // UI Changes for Edit Mode
+      document.getElementById('regTag').readOnly = true; // Cannot change ID
       document.getElementById('regTag').style.backgroundColor = "#e0e0e0";
-
-      // Change Button Text
-      document.getElementById('formTitle').innerText = "✏️ Edit Student";
+      document.getElementById('formTitle').innerText = "✏️ Edit Student Details";
       document.getElementById('btnSave').innerText = "Update Student";
       document.getElementById('btnCancel').style.display = "block";
       
@@ -275,15 +277,13 @@
       document.querySelector('.admin-box').scrollIntoView({behavior: 'smooth'});
   }
 
-  // Delete Trigger
+  // --- 5. DELETE FUNCTION ---
   window.deleteStudent = async function(id, name) {
-      if(confirm(`Are you sure you want to delete ${name}? This cannot be undone.`)) {
+      if(confirm(`⚠️ Are you sure you want to DELETE ${name}?\nThis cannot be undone.`)) {
           try {
               await deleteDoc(doc(db, "students", id));
-              alert("Student deleted.");
           } catch(e) {
-              console.error(e);
-              alert("Error deleting student.");
+              alert("Error deleting: " + e.message);
           }
       }
   }
@@ -291,11 +291,12 @@
   // Reset Form
   window.resetForm = function() {
       document.getElementById('regName').value = '';
+      document.getElementById('regSex').value = '';
       document.getElementById('regGrade').value = '';
       document.getElementById('regTag').value = '';
       document.getElementById('regPhoto').value = '';
       
-      // Reset UI state
+      // Reset UI
       document.getElementById('regTag').readOnly = false;
       document.getElementById('regTag').style.backgroundColor = "#fffde7";
       document.getElementById('formTitle').innerText = "➕ Register New Student";
@@ -303,7 +304,7 @@
       document.getElementById('btnCancel').style.display = "none";
   }
 
-  // --- 4. ATTENDANCE LOGIC ---
+  // --- 6. ATTENDANCE LOGIC ---
   const attendanceInput = document.getElementById('attendanceInput');
   const statusDiv = document.getElementById('status');
 
@@ -319,10 +320,12 @@
 
   async function markAttendance(id) {
       const student = studentDirectory[id];
-      const subject = document.getElementById('attendanceSubject').value; // Get Subject
+      const subject = document.getElementById('attendanceSubject').value; // Get selected subject
 
-      const studentName = student ? student.name : "Unknown Student";
+      // Prepare data
+      const studentName = student ? student.name : "Unknown";
       const studentGrade = student ? student.grade : "--";
+      const studentSex = student ? student.sex : "--";
       const studentPhoto = student ? student.photo : null;
 
       try {
@@ -330,13 +333,14 @@
               tag_id: id,
               student_name: studentName,
               student_grade: studentGrade,
+              student_sex: studentSex,
               student_photo: studentPhoto,
-              subject: subject, // Save Subject
+              subject: subject, // Save the subject
               timestamp: serverTimestamp()
           });
           
           if(student) {
-              showStatus(`✅ ${studentName} checked in for ${subject}!`, "success");
+              showStatus(`✅ ${studentName} checked into ${subject}!`, "success");
           } else {
               showStatus(`⚠️ Unregistered Tag: ${id}`, "error");
           }
@@ -353,7 +357,7 @@
       setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
   }
 
-  // --- 5. SHOW ATTENDANCE TABLE ---
+  // --- 7. LIVE ATTENDANCE TABLE ---
   const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"), limit(10));
   
   onSnapshot(q, (snapshot) => {
@@ -371,9 +375,10 @@
           const row = `<tr>
               <td>${imgHtml}</td>
               <td>${dateStr}</td>
-              <td style="font-weight:bold; color:#333;">${data.student_name || "Unknown"}</td>
-              <td><span style="background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:4px; font-size:0.9em;">${data.subject || "Gen"}</span></td>
-              <td>${data.student_grade || "N/A"}</td>
+              <td style="font-weight:bold; color:#333;">${data.student_name}</td>
+              <td><span style="background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:4px; font-size:0.9em;">${data.subject || "General"}</span></td>
+              <td>${data.student_grade}</td>
+              <td>${data.student_sex || '-'}</td>
           </tr>`;
           tbody.innerHTML += row;
       });
